@@ -19,8 +19,14 @@ printf "${CYAN}Nom du projet${RESET} (ex: myapp) : "
 read APP_NAME
 APP_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
 
-printf "${CYAN}Domaine${RESET} (ex: monapp.com) : "
-read APP_HOST
+printf "${CYAN}Sous domaine${RESET} (ex: monapp) : "
+read APP_SUBDOMAIN
+
+printf "${CYAN}Domaine (par défaut : ${BOLD}duckdns.org${RESET}) : "
+read APP_DOMAIN
+APP_DOMAIN=${APP_DOMAIN:-duckdns.org}
+
+APP_HOST="${APP_SUBDOMAIN:+$APP_SUBDOMAIN.}${APP_DOMAIN}"
 
 APP_PROTOCOL=https
 
@@ -66,11 +72,10 @@ PROXY_PATH=${PROXY_PATH}
 
 # ── Host ──────────────────────────────────────────
 APP_HOST=${APP_HOST}
-APP_PROTOCOL=${APP_PROTOCOL}
 
 # ── CORS / URLs ───────────────────────────────────
-CORS_ORIGIN=\${APP_PROTOCOL}://\${APP_HOST}
-VITE_API_URL=\${APP_PROTOCOL}://\${APP_HOST}/api/
+CORS_ORIGIN=https://\${APP_HOST}
+VITE_API_URL=https://\${APP_HOST}/api/
 
 # ── JWT & Cookies ─────────────────────────────────
 ACCESS_TOKEN_EXPIRATION_TIME=1h
@@ -123,7 +128,7 @@ fi
 
 echo ""
 echo "  Projet   : ${BOLD}${APP_NAME}${RESET}"
-echo "  URL      : ${BOLD}${APP_PROTOCOL}://${APP_HOST}${RESET}"
+echo "  URL      : ${BOLD}https://${APP_HOST}${RESET}"
 echo "  Mode     : ${BOLD}domain${RESET} (HTTPS via Let's Encrypt)"
 echo "  Timezone : ${BOLD}${TZ}${RESET}"
 echo "  Secrets  : ${GREEN}générés automatiquement${RESET}"
