@@ -41,7 +41,7 @@ async function bootstrap() {
     methods: 'GET,PATCH,POST,DELETE',
     credentials: true,
   });
-  await app.listen(process.env.PORT!);
+  await app.listen(3310);
 }
 bootstrap().catch((error) => {
   console.error('Error during application bootstrap:', error);

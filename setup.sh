@@ -80,7 +80,6 @@ fi
 if [ "$DEPLOY_MODE" = "domain" ]; then
   cat > .env <<EOF
 # ── Application ───────────────────────────────────
-PORT=3310
 TZ=${TZ}
 
 # ── MongoDB ───────────────────────────────────────
@@ -111,7 +110,6 @@ EOF
 else
   cat > .env <<EOF
 # ── Application ───────────────────────────────────
-PORT=3310
 TZ=${TZ}
 
 # ── MongoDB ───────────────────────────────────────

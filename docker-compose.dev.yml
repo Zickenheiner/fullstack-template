@@ -16,7 +16,6 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     environment:
-      PORT: ${PORT}
       CORS_ORIGIN: ${CORS_ORIGIN}
       MONGO_URL: ${MONGO_URL}
       ACCESS_TOKEN_EXPIRATION_TIME: ${ACCESS_TOKEN_EXPIRATION_TIME}
