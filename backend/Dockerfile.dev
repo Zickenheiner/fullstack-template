@@ -1,0 +1,18 @@
+# Image Node légère
+FROM node:20-alpine
+
+# Installer outils nécessaires si modules natifs
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+# Installer les dépendances
+COPY package*.json ./
+RUN npm ci
+
+# Exposer le port de l'API
+EXPOSE 3310
+ENV NODE_ENV=development
+
+# Par défaut, Nest utilise "npm run start:dev"
+CMD ["npm", "run", "start:dev"]

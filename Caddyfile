@@ -1,0 +1,12 @@
+{$APP_HOST} {
+    # API → backend (on retire le préfixe /api)
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy backend:3310
+    }
+
+    # Tout le reste → frontend (nginx static)
+    handle {
+        reverse_proxy frontend:80
+    }
+}
