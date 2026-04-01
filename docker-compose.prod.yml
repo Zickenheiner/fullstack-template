@@ -1,6 +1,6 @@
 services:
   mongo:
-    image: mongo:7
+    image: mongo:4.4
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
@@ -27,6 +27,7 @@ services:
       - mongo
     networks:
       - app
+      - proxy
 
   frontend:
     build:
@@ -37,25 +38,14 @@ services:
     restart: unless-stopped
     networks:
       - app
-
-  caddy:
-    image: caddy:alpine
-    restart: unless-stopped
-    environment:
-      APP_PORT: ${APP_PORT}
-    ports:
-      - "${APP_PORT}:80"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - app
+      - proxy
 
 networks:
   app:
     driver: bridge
+  proxy:
+    external: true
+    name: proxy
 
 volumes:
   mongo_data:
