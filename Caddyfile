@@ -1,4 +1,4 @@
-{$APP_HOST} {
+:{$APP_PORT} {
     # API → backend (on retire le préfixe /api)
     handle /api/* {
         uri strip_prefix /api

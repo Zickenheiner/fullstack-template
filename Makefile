@@ -1,5 +1,16 @@
 DEV  = docker compose -f docker-compose.dev.yml
-PROD = docker compose -f docker-compose.prod.yml
+
+# ─── Détection du mode de déploiement ─────────────────────────────────────────
+
+DEPLOY_MODE := $(shell grep -s '^DEPLOY_MODE=' .env | cut -d= -f2 | tr -d '[:space:]')
+PROXY_PATH  := $(shell grep -s '^PROXY_PATH=' .env | cut -d= -f2 | tr -d '[:space:]')
+PROXY_PATH  := $(if $(PROXY_PATH),$(PROXY_PATH),../reverse-proxy)
+
+ifeq ($(DEPLOY_MODE),domain)
+  PROD = docker compose -f docker-compose.prod.domain.yml
+else
+  PROD = docker compose -f docker-compose.prod.yml
+endif
 
 # ─── Dev ──────────────────────────────────────────────────────────────────────
 
