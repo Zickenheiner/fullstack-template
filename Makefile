@@ -57,9 +57,9 @@ mongo-sh-dev:
 
 # ─── Setup ────────────────────────────────────────────────────────────────────
 
-env:
+setup:
 	@sh setup.sh
 
 .PHONY: dev dev-d dev-down dev-logs dev-sh-% \
         up down restart logs logs-% sh-% deploy \
-        mongo-sh mongo-sh-dev env
+        mongo-sh mongo-sh-dev setup

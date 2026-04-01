@@ -15,11 +15,13 @@ echo ""
 
 # ── Questions ─────────────────────────────────────────────────────────────────
 
-printf "${CYAN}Nom du projet${RESET} (ex: myapp) : "
-read APP_NAME
+DEFAULT_NAME=$(basename "$(cd "$(dirname "$0")" && pwd)" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+printf "${CYAN}Nom du projet${RESET} (défaut : ${BOLD}${DEFAULT_NAME}${RESET}) : "
+read APP_NAME_INPUT
+APP_NAME=${APP_NAME_INPUT:-$DEFAULT_NAME}
 APP_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
 
-printf "${CYAN}Sous domaine${RESET} (ex: monapp) : "
+printf "${CYAN}Sous domaine${RESET} (par défaut aucun sous-domaine) : "
 read APP_SUBDOMAIN
 
 printf "${CYAN}Domaine (par défaut : ${BOLD}duckdns.org${RESET}) : "
@@ -34,9 +36,6 @@ printf "${CYAN}Chemin vers le reverse-proxy${RESET} (défaut : ${BOLD}../reverse
 read PROXY_INPUT
 PROXY_PATH=${PROXY_INPUT:-../reverse-proxy}
 
-printf "${CYAN}Timezone${RESET} (défaut : Europe/Paris) : "
-read TZ_INPUT
-TZ=${TZ_INPUT:-Europe/Paris}
 
 # ── Génération des secrets ────────────────────────────────────────────────────
 
@@ -58,7 +57,7 @@ fi
 
 cat > .env <<EOF
 # ── Application ───────────────────────────────────
-TZ=${TZ}
+TZ=Europe/Paris
 
 # ── MongoDB ───────────────────────────────────────
 MONGO_USER=${APP_NAME}
@@ -91,7 +90,13 @@ echo "${GREEN}✓ .env généré avec succès${RESET}"
 
 CADDY_FILE="${APP_NAME}.caddy"
 
-cat > "$CADDY_FILE" <<EOF
+if [ -d "$PROXY_PATH/conf.d" ]; then
+  CADDY_DEST="$PROXY_PATH/conf.d/$CADDY_FILE"
+else
+  CADDY_DEST="./$CADDY_FILE"
+fi
+
+cat > "$CADDY_DEST" <<EOF
 ${APP_HOST} {
     handle /api/* {
         uri strip_prefix /api
@@ -103,12 +108,8 @@ ${APP_HOST} {
 }
 EOF
 
-echo "${GREEN}✓ ${CADDY_FILE} généré${RESET}"
-
-# Copie vers le reverse-proxy si le dossier existe
 if [ -d "$PROXY_PATH/conf.d" ]; then
-  cp "$CADDY_FILE" "$PROXY_PATH/conf.d/$CADDY_FILE"
-  echo "${GREEN}✓ Config copiée vers ${PROXY_PATH}/conf.d/${RESET}"
+  echo "${GREEN}✓ ${CADDY_FILE} généré dans ${PROXY_PATH}/conf.d/${RESET}"
 
   # Reload Caddy si le stack reverse-proxy tourne
   if docker compose -f "$PROXY_PATH/docker-compose.yml" ps --quiet caddy 2>/dev/null | grep -q .; then
@@ -120,6 +121,7 @@ if [ -d "$PROXY_PATH/conf.d" ]; then
   fi
 else
   echo "${YELLOW}⚠ Dossier reverse-proxy introuvable (${PROXY_PATH}).${RESET}"
+  echo "${GREEN}✓ ${CADDY_FILE} généré localement${RESET}"
   echo "  Copie manuelle requise : cp ${CADDY_FILE} ${PROXY_PATH}/conf.d/"
   echo "  Puis : cd ${PROXY_PATH} && make up (ou make reload si déjà lancé)"
 fi
