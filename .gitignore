@@ -1,7 +1,11 @@
-.env
-docker-compose.dev.yml
-feature.sh
-files.sh
 .claude
 CLAUDE.md
+
+.env
+
+feature.sh
+files.sh
+
+docker-compose.dev.yml
 Dockerfile.dev
+setup.dev.sh
