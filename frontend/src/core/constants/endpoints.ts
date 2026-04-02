@@ -1,6 +1,6 @@
 const endpoints = {
   auth: {
-    refresh: 'auth/refresh',
+    refresh: '/auth/refresh',
   },
 };
 
