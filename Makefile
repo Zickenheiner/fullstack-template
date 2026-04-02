@@ -3,10 +3,7 @@ PROD = docker compose -f docker-compose.prod.yml
 
 # ─── Dev ──────────────────────────────────────────────────────────────────────
 
-dev:
-	$(DEV) up --build
-
-dev-d:
+dev-up:
 	$(DEV) up --build -d
 
 dev-down:
@@ -57,9 +54,12 @@ mongo-sh-dev:
 
 # ─── Setup ────────────────────────────────────────────────────────────────────
 
-setup:
-	@sh setup.sh
+dev-setup:
+	@sh setup.dev.sh
 
-.PHONY: dev dev-d dev-down dev-logs dev-sh-% \
+setup:
+	@sh setup.prod.sh
+
+.PHONY: dev-up dev-down dev-logs dev-sh-% \
         up down restart logs logs-% sh-% deploy \
-        mongo-sh mongo-sh-dev setup
+        mongo-sh mongo-sh-dev dev-setup
