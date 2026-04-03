@@ -66,19 +66,19 @@ make dev-up
 
 Trois conteneurs démarrent sur le réseau interne `app` :
 
-| Service      | URL locale                   | Description                            |
-| ------------ | ---------------------------- | -------------------------------------- |
-| **Frontend** | http://localhost:3000        | Vite avec HMR (Hot Module Replacement) |
-| **Backend**  | http://localhost:3310        | NestJS en watch mode                   |
-| **MongoDB**  | `localhost:<port dynamique>` | Exposé uniquement sur 127.0.0.1        |
+| Service      | URL locale            | Description                            |
+| ------------ | --------------------- | -------------------------------------- |
+| **Frontend** | http://localhost:3000 | Vite avec HMR (Hot Module Replacement) |
+| **Backend**  | http://localhost:3310 | NestJS en watch mode                   |
+| **MongoDB**  | `localhost:27017`     | Exposé uniquement sur 127.0.0.1        |
 
-> Le port MongoDB exposé sur la machine hôte est dynamique. Pour le récupérer :
->
-> ```bash
-> docker compose -f docker-compose.dev.yml port mongo 27017
-> ```
->
-> URL Compass : `mongodb://<MONGO_USER>:<MONGO_PASS>@localhost:<port>/<MONGO_DB_NAME>?authSource=admin`
+Pour afficher l'URL MongoDB Compass :
+
+```bash
+make dev-compass
+```
+
+URL Compass : `mongodb://<MONGO_USER>:<MONGO_PASS>@localhost:27017/<MONGO_DB_NAME>?authSource=admin`
 
 ### Hot reload
 
@@ -324,16 +324,16 @@ make down              # Arrêter tous les services
 
 ### Ce qui change entre dev et prod
 
-| Aspect               | Développement                           | Production                                 |
-| -------------------- | --------------------------------------- | ------------------------------------------ |
-| **Images**           | Simple stage, code source monté         | Multi-stage, artefacts compilés uniquement |
-| **Backend**          | `nest start --watch` (hot reload)       | `node dist/main` (build optimisé)          |
-| **Frontend**         | Vite dev server (HMR)                   | Nginx servant les fichiers statiques       |
-| **MongoDB**          | Port exposé dynamiquement sur localhost | Aucun port exposé                          |
-| **Réseau**           | Bridge `app` uniquement                 | Bridge `app` + réseau `proxy` externe      |
-| **CORS / URLs**      | `http://localhost`                      | `https://votre-domaine.com`                |
-| **Token expiration** | 24h                                     | 1h                                         |
-| **Accès**            | Ports directs (3000, 3310)              | Via Caddy uniquement (HTTPS)               |
+| Aspect               | Développement                          | Production                                 |
+| -------------------- | -------------------------------------- | ------------------------------------------ |
+| **Images**           | Simple stage, code source monté        | Multi-stage, artefacts compilés uniquement |
+| **Backend**          | `nest start --watch` (hot reload)      | `node dist/main` (build optimisé)          |
+| **Frontend**         | Vite dev server (HMR)                  | Nginx servant les fichiers statiques       |
+| **MongoDB**          | Port fixe `27017` exposé sur localhost | Aucun port exposé                          |
+| **Réseau**           | Bridge `app` uniquement                | Bridge `app` + réseau `proxy` externe      |
+| **CORS / URLs**      | `http://localhost`                     | `https://votre-domaine.com`                |
+| **Token expiration** | 24h                                    | 1h                                         |
+| **Accès**            | Ports directs (3000, 3310)             | Via Caddy uniquement (HTTPS)               |
 
 ---
 
@@ -356,3 +356,43 @@ make down              # Arrêter tous les services
 | `ACCESS_TOKEN_EXPIRATION_TIME` | Durée de vie de l'access token              | `1h` (prod) / `24h` (dev)                |
 
 > Le fichier `.env` est dans le `.gitignore`. Ne jamais le commiter.
+
+---
+
+## GitHub Actions
+
+Le workflow `.github/workflows/deploy.yml` se déclenche automatiquement à chaque push sur `main` et déploie l'application sur le VPS via SSH.
+
+### 1. Créer une clé SSH dédiée
+
+Ne pas réutiliser une clé personnelle existante. Créer une paire dédiée au déploiement depuis ta machine locale :
+
+```bash
+ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_actions_deploy
+```
+
+Laisser la passphrase vide (GitHub Actions ne peut pas la saisir).
+
+Ensuite, autoriser cette clé sur le VPS :
+
+```bash
+ssh-copy-id -i ~/.ssh/github_actions_deploy.pub <USER>@<VPS_HOST>
+```
+
+Ou manuellement, ajouter le contenu de `~/.ssh/github_actions_deploy.pub` à `~/.ssh/authorized_keys` sur le VPS.
+
+### 2. Configurer les secrets
+
+À configurer dans **Settings → Secrets and variables → Actions** du dépôt GitHub :
+
+| Secret        | Description                                                                                                                                         |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VPS_HOST`    | Adresse IP ou domaine du VPS                                                                                                                        |
+| `VPS_USER`    | Utilisateur SSH (ex : `ubuntu`, `root`)                                                                                                             |
+| `VPS_SSH_KEY` | Contenu **intégral** de `~/.ssh/github_actions_deploy`, de `-----BEGIN OPENSSH PRIVATE KEY-----` jusqu'à `-----END OPENSSH PRIVATE KEY-----` inclus |
+| `VPS_PATH`    | Chemin absolu du projet sur le VPS (ex : `/home/ubuntu/mon-projet`)                                                                                 |
+
+### Fonctionnement
+
+1. Se connecte au VPS via SSH avec la clé dédiée
+2. Exécute `make deploy` dans le dossier du projet (`git pull` + rebuild des conteneurs)
