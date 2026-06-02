@@ -51,6 +51,10 @@ src/features/<feature-name>/
 
 ## Conventions de code
 
+### Commentaires
+
+- **Aucun commentaire dans le code** : ne jamais ajouter de commentaires (`//`, `/* */`, JSDoc, etc.). Le code doit être auto-documenté via des noms explicites.
+
 ### Naming
 
 - **Fichiers** : lowercase (`user.service.ts`, `user.controller.ts`, `user.schema.ts`)
@@ -109,7 +113,7 @@ src/features/<feature-name>/
 
 ### Git
 
-- Format de commit : `feat(US-XX): description courte en anglais`
+- Format de commit : `feat(US-XX): description courte en français`
 - Un commit + push par user story completee
 - Toujours verifier que `npx nest build` passe avant de commit
 

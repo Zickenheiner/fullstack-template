@@ -47,6 +47,10 @@ src/features/<feature-name>/
 
 ## Conventions de code
 
+### Commentaires
+
+- **Aucun commentaire dans le code** : ne jamais ajouter de commentaires (`//`, `/* */`, JSDoc, etc.). Le code doit être auto-documenté via des noms explicites.
+
 ### Naming
 
 - **Fichiers** : kebab-case (`user-profile.hook.ts`, `user-profile.entity.ts`)
@@ -104,7 +108,7 @@ L'API backend n'existe pas encore. Les agents doivent :
 
 ### Git
 
-- Format de commit : `feat(US-XX): description courte en anglais`
+- Format de commit : `feat(US-XX): description courte en français`
 - Un commit + push par user story complétée
 - Toujours vérifier que `tsc --noEmit` et `eslint` passent avant de commit
 
