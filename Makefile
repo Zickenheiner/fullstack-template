@@ -68,4 +68,4 @@ setup:
 
 .PHONY: dev-up dev-compass dev-down dev-logs dev-sh-% \
         up down restart logs logs-% sh-% deploy \
-        mongo-sh mongo-sh-dev dev-setup
+        mongo-sh mongo-sh-dev dev-setup setup
