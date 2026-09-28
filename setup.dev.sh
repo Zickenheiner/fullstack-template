@@ -51,12 +51,17 @@ MONGO_PASS=${MONGO_PASS}
 MONGO_DB_NAME=${APP_NAME}
 MONGO_URL=mongodb://\${MONGO_USER}:\${MONGO_PASS}@mongo:27017/\${MONGO_DB_NAME}?authSource=admin
 
+# ── Host ──────────────────────────────────────────
+APP_PROTOCOL=http
+
 # ── CORS / URLs ───────────────────────────────────
 CORS_ORIGIN=http://localhost:3000
 VITE_API_URL=http://localhost:3310
 
 # ── JWT & Cookies ─────────────────────────────────
 ACCESS_TOKEN_EXPIRATION_TIME=24h
+REFRESH_TOKEN_EXPIRATION_TIME=7d
+REFRESH_COOKIE_PATH=/auth/refresh
 ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
 REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
 COOKIE_SECRET=${COOKIE_SECRET}

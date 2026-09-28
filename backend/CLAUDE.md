@@ -4,7 +4,7 @@
 
 - **Framework** : NestJS ^11 + TypeScript 5.7
 - **Base de donnees** : MongoDB via Mongoose ^8 + @nestjs/mongoose
-- **Auth** : Passport JWT (@nestjs/passport, passport-jwt) — extraction depuis cookies ou header Authorization
+- **Auth** : Passport JWT (@nestjs/passport, passport-jwt) — tokens exclusivement en cookies HTTP-only
 - **Hashing** : Argon2
 - **Validation** : class-validator ^0.14 + class-transformer ^0.5
 - **Documentation API** : @nestjs/swagger + @scalar/nestjs-api-reference
@@ -37,17 +37,21 @@ src/features/<feature-name>/
 ## Fichiers core existants
 
 - `@core/guards/access-token.guard.ts` — Guard JWT global avec support `@Public()`
-- `@core/strategies/at.strategy.ts` — Extraction JWT depuis cookies (`access_token`) ou header `Authorization: Bearer`
+- `@core/guards/refresh-token.guard.ts` — Guard `jwt-refresh` a utiliser avec `@Public()` sur l'endpoint de refresh
+- `@core/strategies/at.strategy.ts` — Extraction JWT depuis le cookie `access_token` uniquement
+- `@core/strategies/rt.strategy.ts` — Strategie `jwt-refresh`, extraction depuis le cookie `refresh_token` (`REFRESH_TOKEN_SECRET`)
+- `@core/configs/cookie.config.ts` — Noms et options des cookies d'auth (`access_token`, `refresh_token`, `logged_in`)
+- `@core/services/auth-cookie.service.ts` — `setAuthCookies(res, accessToken, refreshToken)` / `clearAuthCookies(res)`
+- `@core/core.module.ts` — Module global exposant `AuthCookieService`
 - `@core/decorators/public.decorator.ts` — Decorateur `@Public()` pour bypasser le guard JWT
-- `@core/configs/` — Reserve pour fichiers de configuration
 - `@core/dtos/` — Reserve pour DTOs partages
 - `@core/interceptors/` — Reserve pour interceptors
 - `@core/middlewares/` — Reserve pour middlewares
 - `@core/pipes/` — Reserve pour pipes custom
 - `@core/roles/` — Reserve pour decorateurs de roles
 - `@core/tasks/` — Reserve pour taches planifiees
-- `src/app.module.ts` — Module racine (ConfigModule global, MongooseModule async, APP_GUARD = AccessTokenGuard)
-- `src/main.ts` — Bootstrap avec mongoSanitize, ValidationPipe, Swagger/Scalar, cookieParser, CORS
+- `src/app.module.ts` — Module racine (ConfigModule global, MongooseModule async, CoreModule, AtStrategy, RtStrategy, APP_GUARD = AccessTokenGuard)
+- `src/main.ts` — Bootstrap avec mongoSanitize, ValidationPipe, Swagger/Scalar (cookie auth `access_token`), cookieParser, CORS
 
 ## Conventions de code
 
@@ -104,7 +108,11 @@ src/features/<feature-name>/
 
 - Toutes les routes sont protegees par defaut (global `AccessTokenGuard`)
 - Les routes publiques utilisent le decorateur `@Public()`
-- JWT lu depuis `cookies.access_token` ou `Authorization: Bearer <token>`
+- JWT lu uniquement depuis `cookies.access_token` (aucun header `Authorization`)
+- Ne jamais renvoyer les tokens dans le body : utiliser `AuthCookieService.setAuthCookies(res, accessToken, refreshToken)` (via `@Res({ passthrough: true })`)
+- Logout / echec de refresh : `AuthCookieService.clearAuthCookies(res)`
+- Endpoint de refresh : `POST /auth/refresh` avec `@Public()` + `@UseGuards(RefreshTokenGuard)`, sans body
+- Cookies : `access_token` (httpOnly, path `/`), `refresh_token` (httpOnly, path `REFRESH_COOKIE_PATH`), `logged_in=1` (lisible JS, indicateur front) — `sameSite: strict`, `secure` si `APP_PROTOCOL=https`
 
 ### Path aliases
 

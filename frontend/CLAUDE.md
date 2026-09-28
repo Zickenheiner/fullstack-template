@@ -35,13 +35,12 @@ src/features/<feature-name>/
 
 ## Fichiers core existants
 
-- `@/core/config/api.ts` — Wrapper `request<T>(config)` avec refresh token automatique
+- `@/core/config/api.ts` — Wrapper `request<T>(config)` avec `credentials: 'include'` et refresh automatique sur 401 (refresh unique partagé entre requêtes concurrentes)
 - `@/core/config/queryClient.ts` — Instance TanStack Query
 - `@/core/constants/endpoints.ts` — Objet des URLs d'API par entité
 - `@/core/constants/methods.ts` — Constantes HTTP (GET, POST, PATCH, DELETE)
 - `@/core/constants/routes.ts` — Constantes des routes frontend
-- `@/core/local/storage.ts` — Gestion tokens (access/refresh) via react-secure-storage
-- `@/core/utils/jwt.ts` — Vérification expiration token
+- `@/core/local/session.ts` — `isLoggedIn()` (lit le cookie `logged_in`) et `clearSession()`
 - `@/core/errors/api.error.ts` — Classe ApiError custom
 - `@/core/types/query.type.ts` — Type QueryParams
 
@@ -90,6 +89,12 @@ L'API backend n'existe pas encore. Les agents doivent :
 
 - Les routes publiques passent par le composant `Public` (redirige si authentifié)
 - Les routes privées passent par `Private` + `Layout` (redirige si non authentifié)
+
+### Auth
+
+- Les tokens JWT sont en cookies HTTP-only posés par le backend : ne jamais les lire, stocker ni envoyer en header `Authorization`
+- L'état connecté se lit uniquement via `isLoggedIn()` de `@/core/local/session.ts`
+- Les réponses de login ne contiennent pas de token : après un login réussi, naviguer simplement vers la route privée
 - Ajouter les nouvelles routes dans `@/core/constants/routes.ts` ET dans `src/app/Router.tsx`
 
 ### shadcn/ui

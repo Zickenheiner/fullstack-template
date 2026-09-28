@@ -27,10 +27,7 @@ async function bootstrap() {
     .setTitle('Mon API')
     .setDescription('Documentation API')
     .setVersion('1.0')
-    .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'AccessToken',
-    )
+    .addCookieAuth('access_token')
     .build();
 
   app.use(cookieParser(process.env.COOKIE_SECRET));

@@ -71,13 +71,16 @@ PROXY_PATH=${PROXY_PATH}
 
 # ── Host ──────────────────────────────────────────
 APP_HOST=${APP_HOST}
+APP_PROTOCOL=${APP_PROTOCOL}
 
 # ── CORS / URLs ───────────────────────────────────
 CORS_ORIGIN=https://\${APP_HOST}
-VITE_API_URL=https://\${APP_HOST}/api/
+VITE_API_URL=https://\${APP_HOST}/api
 
 # ── JWT & Cookies ─────────────────────────────────
 ACCESS_TOKEN_EXPIRATION_TIME=1h
+REFRESH_TOKEN_EXPIRATION_TIME=7d
+REFRESH_COOKIE_PATH=/api/auth/refresh
 ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
 REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
 COOKIE_SECRET=${COOKIE_SECRET}

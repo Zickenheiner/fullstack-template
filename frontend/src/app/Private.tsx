@@ -1,8 +1,4 @@
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-} from '@/core/local/storage';
+import { isLoggedIn } from '@/core/local/session';
 import { Navigate, useLocation } from 'react-router-dom';
 import Layout from './Layout';
 
@@ -12,11 +8,8 @@ interface Props {
 
 export default function Private({ redirect }: Props) {
   const location = useLocation();
-  const accessToken = getAccessToken();
-  const refreshToken = getRefreshToken();
 
-  if (!accessToken && !refreshToken) {
-    clearTokens();
+  if (!isLoggedIn()) {
     return <Navigate to={redirect} state={{ from: location }} replace />;
   }
 

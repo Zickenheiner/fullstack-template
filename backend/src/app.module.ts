@@ -4,6 +4,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from '@core/guards/access-token.guard';
 import { AtStrategy } from '@core/strategies/at.strategy';
+import { RtStrategy } from '@core/strategies/rt.strategy';
+import { CoreModule } from '@core/core.module';
 
 @Module({
   imports: [
@@ -21,9 +23,11 @@ import { AtStrategy } from '@core/strategies/at.strategy';
       }),
       inject: [ConfigService],
     }),
+    CoreModule,
   ],
   providers: [
     AtStrategy,
+    RtStrategy,
     {
       provide: APP_GUARD,
       useClass: AccessTokenGuard,

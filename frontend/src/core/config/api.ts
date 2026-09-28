@@ -1,12 +1,7 @@
 import endpoints from '../constants/endpoints';
+import routes from '../constants/routes';
 import { ApiError } from '../errors/api.error';
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-  setAccessToken,
-  setRefreshToken,
-} from '../local/storage';
+import { clearSession } from '../local/session';
 import type { QueryParams } from '../types/query.type';
 
 interface Config {
@@ -28,75 +23,55 @@ const buildUrl = (url: string, query?: QueryParams) => {
   return `${fullUrl}?${searchParams.toString()}`;
 };
 
-const buildHeaders = (
-  token?: string | null,
-  extra?: HeadersInit,
-): HeadersInit => ({
+const buildHeaders = (extra?: HeadersInit): HeadersInit => ({
   'Content-Type': 'application/json',
   ...extra,
-  ...(token ? { Authorization: `Bearer ${token}` } : {}),
 });
 
-let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
 
-const tryRefresh = async (): Promise<string | null> => {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return null;
-
+const refresh = async (): Promise<boolean> => {
   try {
     const response = await fetch(buildUrl(endpoints.auth.refresh), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
+      credentials: 'include',
     });
-
-    if (!response.ok) return null;
-
-    const json = await response.json();
-    setAccessToken(json.accessToken);
-    if (json.refreshToken) setRefreshToken(json.refreshToken);
-    return json.accessToken as string;
+    return response.ok;
   } catch {
-    return null;
+    return false;
   }
 };
 
-const request = async <T = unknown>(config: Config): Promise<T> => {
-  const token = getAccessToken();
+const tryRefresh = (): Promise<boolean> => {
+  if (!refreshPromise) {
+    refreshPromise = refresh().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+};
 
+const request = async <T = unknown>(config: Config): Promise<T> => {
+  const url = buildUrl(config.url, config.query);
   const init: RequestInit = {
     method: config.method,
-    headers: buildHeaders(token as string | null, config.headers),
+    headers: buildHeaders(config.headers),
     body: config.data !== undefined ? JSON.stringify(config.data) : undefined,
+    credentials: 'include',
   };
 
-  const response = await fetch(buildUrl(config.url, config.query), init);
+  let response = await fetch(url, init);
 
-  if (response.status === 401 && !isRefreshing) {
-    isRefreshing = true;
-    const newToken = await tryRefresh();
-    isRefreshing = false;
+  if (response.status === 401) {
+    const refreshed = await tryRefresh();
 
-    if (!newToken) {
-      clearTokens();
-      window.location.href = '/login';
+    if (!refreshed) {
+      clearSession();
+      window.location.href = routes.login;
       throw new ApiError('Session expirée', 401);
     }
 
-    const retryResponse = await fetch(buildUrl(config.url, config.query), {
-      ...init,
-      headers: buildHeaders(newToken, config.headers),
-    });
-
-    if (!retryResponse.ok) {
-      const json = await retryResponse.json().catch(() => null);
-      throw new ApiError(
-        json?.message ?? 'Erreur inconnue',
-        retryResponse.status,
-      );
-    }
-
-    return retryResponse.json() as Promise<T>;
+    response = await fetch(url, init);
   }
 
   if (!response.ok) {

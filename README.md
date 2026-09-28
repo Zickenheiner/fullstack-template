@@ -49,10 +49,14 @@ MONGO_PASS=<généré>
 MONGO_DB_NAME=mon-projet
 MONGO_URL=mongodb://${MONGO_USER}:${MONGO_PASS}@mongo:27017/${MONGO_DB_NAME}?authSource=admin
 
+APP_PROTOCOL=http
+
 CORS_ORIGIN=http://localhost:3000
 VITE_API_URL=http://localhost:3310
 
 ACCESS_TOKEN_EXPIRATION_TIME=24h
+REFRESH_TOKEN_EXPIRATION_TIME=7d
+REFRESH_COOKIE_PATH=/auth/refresh
 ACCESS_TOKEN_SECRET=<généré>
 REFRESH_TOKEN_SECRET=<généré>
 COOKIE_SECRET=<généré>
@@ -275,11 +279,14 @@ COMPOSE_PROJECT_NAME=monapp
 PROXY_PATH=../reverse-proxy
 
 APP_HOST=monapp.example.com
+APP_PROTOCOL=https
 
 CORS_ORIGIN=https://monapp.example.com
-VITE_API_URL=https://monapp.example.com/api/
+VITE_API_URL=https://monapp.example.com/api
 
 ACCESS_TOKEN_EXPIRATION_TIME=1h
+REFRESH_TOKEN_EXPIRATION_TIME=7d
+REFRESH_COOKIE_PATH=/api/auth/refresh
 ACCESS_TOKEN_SECRET=<généré>
 REFRESH_TOKEN_SECRET=<généré>
 COOKIE_SECRET=<généré>
@@ -339,23 +346,38 @@ make down              # Arrêter tous les services
 
 ## Variables d'environnement
 
-| Variable                       | Description                                 | Exemple                                  |
-| ------------------------------ | ------------------------------------------- | ---------------------------------------- |
-| `TZ`                           | Fuseau horaire                              | `Europe/Paris`                           |
-| `MONGO_USER`                   | Utilisateur MongoDB                         | `monapp`                                 |
-| `MONGO_PASS`                   | Mot de passe MongoDB                        | _(généré)_                               |
-| `MONGO_DB_NAME`                | Nom de la base de données                   | `monapp`                                 |
-| `MONGO_URL`                    | URI de connexion complète                   | _(construite depuis les vars ci-dessus)_ |
-| `COMPOSE_PROJECT_NAME`         | Préfixe des noms de conteneurs Docker       | `monapp`                                 |
-| `APP_HOST`                     | Domaine de l'application                    | `monapp.duckdns.org`                     |
-| `CORS_ORIGIN`                  | Origine autorisée pour le CORS              | `https://monapp.duckdns.org`             |
-| `VITE_API_URL`                 | URL de l'API côté frontend (baked au build) | `https://monapp.duckdns.org/api/`        |
-| `ACCESS_TOKEN_SECRET`          | Clé secrète JWT access token                | _(généré)_                               |
-| `REFRESH_TOKEN_SECRET`         | Clé secrète JWT refresh token               | _(généré)_                               |
-| `COOKIE_SECRET`                | Clé de signature des cookies                | _(généré)_                               |
-| `ACCESS_TOKEN_EXPIRATION_TIME` | Durée de vie de l'access token              | `1h` (prod) / `24h` (dev)                |
+| Variable                        | Description                                            | Exemple                                            |
+| ------------------------------- | ------------------------------------------------------ | -------------------------------------------------- |
+| `TZ`                            | Fuseau horaire                                         | `Europe/Paris`                                     |
+| `MONGO_USER`                    | Utilisateur MongoDB                                    | `monapp`                                           |
+| `MONGO_PASS`                    | Mot de passe MongoDB                                   | _(généré)_                                         |
+| `MONGO_DB_NAME`                 | Nom de la base de données                              | `monapp`                                           |
+| `MONGO_URL`                     | URI de connexion complète                              | _(construite depuis les vars ci-dessus)_           |
+| `COMPOSE_PROJECT_NAME`          | Préfixe des noms de conteneurs Docker                  | `monapp`                                           |
+| `APP_HOST`                      | Domaine de l'application                               | `monapp.duckdns.org`                               |
+| `CORS_ORIGIN`                   | Origine autorisée pour le CORS                         | `https://monapp.duckdns.org`                       |
+| `VITE_API_URL`                  | URL de l'API côté frontend (baked au build)            | `https://monapp.duckdns.org/api`                   |
+| `ACCESS_TOKEN_SECRET`           | Clé secrète JWT access token                           | _(généré)_                                         |
+| `REFRESH_TOKEN_SECRET`          | Clé secrète JWT refresh token                          | _(généré)_                                         |
+| `COOKIE_SECRET`                 | Clé de signature des cookies                           | _(généré)_                                         |
+| `ACCESS_TOKEN_EXPIRATION_TIME`  | Durée de vie de l'access token                         | `1h` (prod) / `24h` (dev)                          |
+| `REFRESH_TOKEN_EXPIRATION_TIME` | Durée de vie du refresh token et du cookie `logged_in` | `7d`                                               |
+| `REFRESH_COOKIE_PATH`           | Chemin du cookie `refresh_token` vu par le navigateur  | `/api/auth/refresh` (prod) / `/auth/refresh` (dev) |
+| `APP_PROTOCOL`                  | `https` active l'option `secure` des cookies           | `https` (prod) / `http` (dev)                      |
 
 > Le fichier `.env` est dans le `.gitignore`. Ne jamais le commiter.
+
+### Cookies d'authentification
+
+Les tokens ne transitent jamais par le JavaScript du frontend. Le backend pose trois cookies via `AuthCookieService` :
+
+| Cookie          | HTTP-only | Path                  | Durée                           | Rôle                                     |
+| --------------- | --------- | --------------------- | ------------------------------- | ---------------------------------------- |
+| `access_token`  | oui       | `/`                   | `ACCESS_TOKEN_EXPIRATION_TIME`  | Authentifie chaque requête               |
+| `refresh_token` | oui       | `REFRESH_COOKIE_PATH` | `REFRESH_TOKEN_EXPIRATION_TIME` | Envoyé uniquement à `POST /auth/refresh` |
+| `logged_in`     | non       | `/`                   | `REFRESH_TOKEN_EXPIRATION_TIME` | Indicateur lu par les guards du front    |
+
+Tous sont en `SameSite=Strict`, et `Secure` quand `APP_PROTOCOL=https`. Le frontend envoie ses requêtes avec `credentials: 'include'`.
 
 ---
 
