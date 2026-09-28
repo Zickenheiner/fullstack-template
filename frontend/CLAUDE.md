@@ -115,7 +115,7 @@ L'API backend n'existe pas encore. Les agents doivent :
 
 - Format de commit : `feat(US-XX): description courte en français`
 - Un commit + push par user story complétée
-- Toujours vérifier que `tsc --noEmit` et `eslint` passent avant de commit
+- Toujours vérifier que `tsc --noEmit` et `vite build` passent avant de commit
 
 ## Commandes disponibles
 

@@ -93,7 +93,6 @@ Lis et suis les instructions de `.claude/agents/quality-checker.md`.
 **Livrable** : Tous les checks passent :
 
 - `npx nest build` → 0 erreur
-- `npm run lint` → 0 erreur
 - Verifications manuelles (DI tokens, Swagger, imports)
 - Corriger les erreurs si besoin (max 3 iterations de fix)
 

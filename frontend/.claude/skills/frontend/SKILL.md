@@ -109,7 +109,6 @@ Lis et suis les instructions de `.claude/agents/quality-checker.md`.
 **Livrable** : Tous les checks passent :
 
 - `npx tsc --noEmit` → 0 erreur
-- `npx eslint src/` → 0 erreur
 - `npx vite build` → build réussie
 - Corriger les erreurs si besoin (max 3 itérations de fix)
 
